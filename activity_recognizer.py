@@ -153,7 +153,6 @@ class GestureRecognitionNode(Node):
         return prediction
 
     def process(self, **kwds):
-        print(mode)
         if self.mode == "recording":
             self.gestures[self.gesture_to_train.currentText()].append(kwds["dataIn"])
         if self.mode == "recognizing":
@@ -180,7 +179,6 @@ class FFTNode(Node):
             'dataOut': dict(io='out'),
         }
         Node.__init__(self, name, terminals=terminals)
-        print("start")
 
     # fourier transforms averages of acceloremeter data
     def transform(self, data):
