@@ -1,14 +1,9 @@
 (written by Kay Brinkmann reviewed by Marco Beetz)
 1) Avoiding Pitfalls When Using Machine Learning in HCI Studies
-2) There are several ways in which Machine Learning (ML) is used in HCI Reasearch. Common examples for these are using ML to model human behaviour, for the developement of novel user interface techiniques
-   (e.g. reactions to user input, optimizing system resources, providing intelligent notifications), or to predict user activities and interactions.
-3) One of the overarching problems described by the authors of the paper is, that ML research methods are often seen as substitutes for traditional methods.
-   This is problematic for several reason, but most importantly because the inner workings of a ML model are often unclear, which complicates interpretation (especially for unsupervised models).
+2) There are several ways in which Machine Learning (ML) is used in HCI Reasearch. Common examples for these are using ML to model human behaviour, for the developement of novel user interface techniques
+   (e.g. reactions to user input, optimizing system resources, providing intelligent notifications) or to predict user activities and interactions.
+3) One of the overarching problems described by the authors of the paper is that ML research methods are often seen as substitutes for traditional methods.
+   This is problematic for several reasons but mainly because the inner workings of a ML model are often unclear which complicates interpretation (especially for unsupervised models).
    In a similiar manner, correlations can be wrongly seen as causations.
-   Another problem the authors see, is the evaluation of classifier perfomance as they it is too inconsistent. They believe, that the importance of accuracy is overstated, as it is often described
-   without any context such as, the baseline performance. This is problematic as a ML model classifying between two options will have a much asier time reaching the often used hurdle of 80% accuracy
-   than a model for a more complex classification with 10 or more possibilities. The base line should also be based on the actual frequency of the different possibilities instead of assuming even
-   distributions. So for example if the occurence of a classificationoption is already 80% , classifying it with an 80% accuracy would not prove that the classifier is helpful.
-4) Both authors have received a Ph.D. in computer science from two renowned british universities which already awards the a ot of credibility. Both have also written serveral papers on topics or projects
-   including ML which were accepted and publicised by prominent intitutions/ Conferences (e.g. ACM, IEEE). As such the authors can be seen as very credible.
-
+   Another problem the authors see is the evaluation of classifier perfomance as they argue it is too inconsistent. They believe that the importance of accuracy is overstated as it is often described without any context such as the baseline performance. This is problematic as a ML model classifying between two options will have a much easier time reaching the often used hurdle of 80% accuracy than a model for a more complex classification with 10 or more possibilities. The base line should also be based on the actual frequency of the different possibilities instead of assuming even distributions. So for example if the expected occurence of a classification option is already 80% classifying it with an 80% accuracy would not prove that the classifier is helpful.
+4) Both authors have received a Ph.D. in computer science from two renowned british universities which already awards them a lot of credibility. Both have also written several papers on topics or projects including ML which were accepted and published by prominent institutions/ conferences (e.g. ACM, IEEE). As such the authors can be seen as very credible.
