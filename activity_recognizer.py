@@ -6,6 +6,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 from DIPPID_pyqtnode import BufferNode, DIPPIDNode
 import numpy as np
+from sklearn import svm
 from scipy.fft import fft
 import sys
 
@@ -28,6 +29,8 @@ class GestureRecognitionNode(Node):
         self.gestures = {}
         self.mode = "recognizing"
         self._init_ui()
+        self.recognizer = svm.SVC()
+        self.is_trained = False
         Node.__init__(self, name, terminals=terminals)
 
     def _init_ui(self):
@@ -77,7 +80,21 @@ class GestureRecognitionNode(Node):
         return self.ui
 
     def train_model(self):
-        print("train SVM")
+        if len(self.gestures.keys()) > 1:
+            x = 0
+            categories = []
+            training_data = []
+            for key in self.gestures.keys():
+                l = [x]*len(self.gestures[key])
+                categories.extend(l)
+                training_data.extend(self.gestures[key])
+                print(key + " = " + str(x))
+                x += 1
+            self.recognizer.fit(training_data, categories)
+            print("train SVM")
+            self.is_trained = True
+        else:
+            print("needs more categories before training")
 
     def safe_model(self):
         # eventuell stattdessen einfach trainingsdaten speichern
@@ -93,32 +110,39 @@ class GestureRecognitionNode(Node):
             self.gesture_to_train.addItems(self.gestures.keys())
         else:
             sys.stderr.write("The gesture name either already exists or is empty. Please choose another name")
-        print("Gestures:", self.gestures)
+        #print("Gestures:", self.gestures)
 
     def start_recorder(self):
         self.set_mode("recording")
         self.gesture_to_train.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
-        print("started recognizer")
+        print("started recorder")
 
     def stop_recorder(self):
         # eventuell noch idel mode hinzufügen
-        self.set_mode("idle")
         self.train_model()
         self.gesture_to_train.setEnabled(True)
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
+        self.set_mode("recognizing")
         print("started recognizer")
 
-    def recognize_gesture(self):
+    def recognize_gesture(self, data):
+        try:
+            prediction = self.recognizer.predict([data])
+        except Exception as e:
+            print(e)
         print("recognized gesture")
-        return
+        return prediction
 
     def process(self, **kwds):
         if self.mode == "recording":
             self.gestures[self.gesture_to_train.currentText()].append(kwds["dataIn"])
-        return recognize_gesture
+        if self.mode == "recognizing":
+            if self.is_trained:
+                print(self.recognize_gesture(kwds["dataIn"]))
+        return #recognize_gesture
 
 
 fclib.registerNodeType(GestureRecognitionNode, [('ML', )])
@@ -141,13 +165,19 @@ class FFTNode(Node):
         print("start")
 
     def transform(self, data):
-        ffts = []
-        for x in data:
-            ffts.append(fft(x))
-        return ffts
+        j = len(data[0])
+        if j != 32:
+            return
+        i = 0
+        avgs = []
+        while i < j:
+            avgs.append(sum([x[i] for x in data]) / 3)
+            i += 1
+        transformed = np.abs(fft(avgs)/len(avgs))[1:len(avgs)//2]
+        return transformed
 
     def process(self, **kwds):
-        fft_result = self.transform([kwds["inputAccelX"], kwds["inputAccelY"], kwds["inputAccelZ"]])[0]
+        fft_result = self.transform([kwds["inputAccelX"], kwds["inputAccelY"], kwds["inputAccelZ"]])
         return {'dataOut': fft_result}
 
 
