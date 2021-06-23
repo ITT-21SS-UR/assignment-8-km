@@ -153,6 +153,7 @@ class GestureRecognitionNode(Node):
         return prediction
 
     def process(self, **kwds):
+        print(mode)
         if self.mode == "recording":
             self.gestures[self.gesture_to_train.currentText()].append(kwds["dataIn"])
         if self.mode == "recognizing":
@@ -217,12 +218,12 @@ if __name__ == '__main__':
     layout.addWidget(fc.widget(), 0, 0, 2, 1)
 
     # create flowchart nodes
-    dippidNode = fc.createNode("DIPPID", pos=(0, 0))
-    recognizerNode = fc.createNode("GestureRecognizer", pos=(200, 100))
-    bufferNodeX = fc.createNode("Buffer", pos=(150, -100))
-    bufferNodeY = fc.createNode("Buffer", pos=(150, 0))
-    bufferNodeZ = fc.createNode("Buffer", pos=(150, 100))
-    fftNode = fc.createNode("FFT", pos=(150, 100))
+    dippidNode = fc.createNode("DIPPID", pos=(-300, -300))
+    recognizerNode = fc.createNode("GestureRecognizer", pos=(150, -300))
+    bufferNodeX = fc.createNode("Buffer", pos=(-150, -450))
+    bufferNodeY = fc.createNode("Buffer", pos=(-150, -300))
+    bufferNodeZ = fc.createNode("Buffer", pos=(-150, -150))
+    fftNode = fc.createNode("FFT", pos=(0, -300))
 
     # connect flowchart nodes
     fc.connectTerminals(dippidNode['accelX'], bufferNodeX['dataIn'])
