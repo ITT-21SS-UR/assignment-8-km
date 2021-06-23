@@ -1,3 +1,12 @@
+"""
+Overall structure for training the classifier taken from "Wiimote - FFT - SVM" notebook
+script created bay both team members
+
+It might take some for the node to switch between to a recognized gesture as the buffernodes will still send data
+from previous movement for some time (as they send the last 32 values)
+
+"""
+
 import DIPPID
 from pyqtgraph.flowchart import Flowchart, Node
 from pyqtgraph.flowchart.library.common import CtrlNode
@@ -9,13 +18,14 @@ import numpy as np
 from sklearn import svm
 from scipy.fft import fft
 import sys
+import pandas as pd
+import json
 
 
 class GestureRecognitionNode(Node):
     """
     Node for recording and recognizing gestures
-    Contains the SVM logic and UI (ähnlich wie bei der DIPPID node in DIPPID_pyqtnode.py)
-    outputs recognized activity if recognizer mode is one
+    Contains the classifier logic and UI
     """
     nodeName = "GestureRecognizer"
 
@@ -27,20 +37,17 @@ class GestureRecognitionNode(Node):
         Node.__init__(self, name, terminals=terminals)
         # dict for gestures contains name as keys and their traing data as values
         self.gestures = {}
+        # sets mode off node, ca either be "recording" when recording gestures or recognizing for classifying gestures
         self.mode = "recognizing"
-        self._init_ui()
         self.recognizer = svm.SVC()
+        # dict for classifications of gestures contains classifier number as key and the gesture's name as value
+        self.classifiers = {}
         self.is_trained = False
+        self._init_ui()
         Node.__init__(self, name, terminals=terminals)
 
+    # creates UI for node
     def _init_ui(self):
-        print("init UI")
-        """
-        UI ähnlich wie bei DIPPID node
-        Textbox für namen von gesture und add button (eventuell noch delete dazu)
-        dann dropdown in der geaddete gestures ausgewählt werden können und start/stop record button, save model button
-        theoretisch auch noch
-        """
         self.ui = QtGui.QWidget()
         self.layout = QtGui.QGridLayout()
 
@@ -73,32 +80,40 @@ class GestureRecognitionNode(Node):
         self.layout.addWidget(self.stop_button)
         self.stop_button.setEnabled(False)
 
+        # text box for gesture output
+        self.recognized_gesture_label = QtGui.QLabel("Recognized gesture: ")
+        self.layout.addWidget(self.recognized_gesture_label)
+
         self.ui.setLayout(self.layout)
-        print("setup UI")
 
     def ctrlWidget(self):
         return self.ui
 
+    # trains svm model
     def train_model(self):
         if len(self.gestures.keys()) > 1:
             x = 0
             categories = []
             training_data = []
-            for key in self.gestures.keys():
-                l = [x]*len(self.gestures[key])
-                categories.extend(l)
-                training_data.extend(self.gestures[key])
-                print(key + " = " + str(x))
-                x += 1
-            self.recognizer.fit(training_data, categories)
-            print("train SVM")
-            self.is_trained = True
-        else:
-            print("needs more categories before training")
 
-    def safe_model(self):
-        # eventuell stattdessen einfach trainingsdaten speichern
-        print("save svm")
+            # creates categories and training data for training model
+            for key in self.gestures.keys():
+                category_numbers = [x]*len(self.gestures[key])
+                categories.extend(category_numbers)
+                training_data.extend(self.gestures[key])
+                # set dictionary entry with classifier number as key and gesture name as value
+                self.classifiers[str(x)] = key
+                x += 1
+
+            # svm classifier needs training data for at least 2 gestures
+            try:
+                self.recognizer.fit(training_data, categories)
+                self.is_trained = True
+
+            except ValueError:
+                pass
+        else:
+            print("needs more gesture categories before training")
 
     def set_mode(self, mode):
         self.mode = mode
@@ -110,30 +125,28 @@ class GestureRecognitionNode(Node):
             self.gesture_to_train.addItems(self.gestures.keys())
         else:
             sys.stderr.write("The gesture name either already exists or is empty. Please choose another name")
-        #print("Gestures:", self.gestures)
 
+    # start recording of gesture
     def start_recorder(self):
         self.set_mode("recording")
+        self.recognized_gesture_label.setText("Recognized gesture: ")
         self.gesture_to_train.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
-        print("started recorder")
+        self.add_gesture_button.setEnabled(False)
 
+    # stops recording of gesture and calls train model function
     def stop_recorder(self):
-        # eventuell noch idel mode hinzufügen
         self.train_model()
         self.gesture_to_train.setEnabled(True)
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
+        self.add_gesture_button.setEnabled(True)
         self.set_mode("recognizing")
-        print("started recognizer")
 
+    # classifies gesture return classifier number of recognized gesture
     def recognize_gesture(self, data):
-        try:
-            prediction = self.recognizer.predict([data])
-        except Exception as e:
-            print(e)
-        print("recognized gesture")
+        prediction = self.recognizer.predict([data])
         return prediction
 
     def process(self, **kwds):
@@ -141,8 +154,9 @@ class GestureRecognitionNode(Node):
             self.gestures[self.gesture_to_train.currentText()].append(kwds["dataIn"])
         if self.mode == "recognizing":
             if self.is_trained:
-                print(self.recognize_gesture(kwds["dataIn"]))
-        return #recognize_gesture
+                recognized_classifier = self.classifiers[str(self.recognize_gesture(kwds["dataIn"])[0])]
+                self.recognized_gesture_label.setText("Recognized gesture: " + recognized_classifier)
+        return
 
 
 fclib.registerNodeType(GestureRecognitionNode, [('ML', )])
@@ -164,6 +178,7 @@ class FFTNode(Node):
         Node.__init__(self, name, terminals=terminals)
         print("start")
 
+    # fourier transforms averages of acceloremeter data
     def transform(self, data):
         j = len(data[0])
         if j != 32:
@@ -189,13 +204,13 @@ if __name__ == '__main__':
     # set up app
     app = QtGui.QApplication([])
     win = QtGui.QMainWindow()
+    win.resize(800, 1000)
     win.setWindowTitle('Analyze DIPPID Data')
     cw = QtGui.QWidget()
     win.setCentralWidget(cw)
     layout = QtGui.QGridLayout()
     cw.setLayout(layout)
     fc = Flowchart(terminals={})
-    w = fc.widget()
     layout.addWidget(fc.widget(), 0, 0, 2, 1)
 
     # create flowchart nodes
