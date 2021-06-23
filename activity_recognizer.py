@@ -1,6 +1,6 @@
 """
 Overall structure for training the classifier taken from "Wiimote - FFT - SVM" notebook
-script created bay both team members
+script created by both team members (Distribution: 80% Kay, 20% Marco)
 
 It might take some for the node to switch between to a recognized gesture as the buffernodes will still send data
 from previous movement for some time (as they send the last 32 values)
