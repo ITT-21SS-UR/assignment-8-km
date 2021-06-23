@@ -4,7 +4,10 @@ script created bay both team members
 
 It might take some for the node to switch between to a recognized gesture as the buffernodes will still send data
 from previous movement for some time (as they send the last 32 values)
-
+Tested gesture were:
+still (phone laying still on the table)
+shake (shaking the phone in your hand)
+turn (turning the phone around its X Axis)
 """
 
 import DIPPID
